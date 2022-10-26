@@ -1,4 +1,3 @@
-import { render } from "@testing-library/react";
 import React, { useEffect } from "react";
 import * as THREE from "three";
 import Stats from "three/examples/jsm/libs/stats.module";
