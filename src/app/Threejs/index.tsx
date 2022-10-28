@@ -26,6 +26,8 @@ export default function Threejs() {
         <NavLink to="cube">cube</NavLink>
         <NavLink to="rain">rain</NavLink>
         <NavLink to="map">map</NavLink>
+        <NavLink to="love">love</NavLink>
+        <NavLink to="Template">template</NavLink>
       </div>
       <div className="content">
         <Outlet></Outlet>

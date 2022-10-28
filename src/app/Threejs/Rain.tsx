@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import * as THREE from "three";
 
-import { raindrop, grassland } from "../../images";
+import { raindrop, grassland } from "../../images/render";
 
 export default function Rain() {
   const scene = new THREE.Scene();
