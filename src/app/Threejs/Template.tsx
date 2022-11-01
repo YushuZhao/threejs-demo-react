@@ -2,14 +2,24 @@ import React, { useEffect } from "react";
 import * as THREE from "three";
 
 export default function Template() {
-  let camera: THREE.PerspectiveCamera,
-    scene: THREE.Scene,
-    renderer: THREE.WebGLRenderer,
-    geometry,
-    material,
-    mesh: THREE.Mesh;
+  let camera: THREE.PerspectiveCamera;
+  let scene: THREE.Scene;
+  let renderer: THREE.WebGLRenderer;
+  let geometry;
+  let material;
+  let mesh: THREE.Mesh;
 
   function init() {
+    initScene();
+    initCamera();
+    initRenderer();
+  }
+
+  function initScene() {
+    scene = new THREE.Scene();
+  }
+
+  function initCamera() {
     camera = new THREE.PerspectiveCamera(
       75,
       window.innerWidth / window.innerHeight,
@@ -17,18 +27,9 @@ export default function Template() {
       10000
     );
     camera.position.z = 1000;
+  }
 
-    scene = new THREE.Scene();
-
-    geometry = new THREE.BoxGeometry(200, 200, 200);
-    material = new THREE.MeshBasicMaterial({
-      color: 0xff0000,
-      wireframe: true,
-    });
-
-    mesh = new THREE.Mesh(geometry, material);
-    scene.add(mesh);
-
+  function initRenderer() {
     renderer = new THREE.WebGLRenderer();
     renderer.setSize(window.innerWidth, window.innerHeight);
 
@@ -48,8 +49,20 @@ export default function Template() {
     renderer.render(scene, camera);
   }
 
+  function initBox() {
+    geometry = new THREE.BoxGeometry(200, 200, 200);
+    material = new THREE.MeshBasicMaterial({
+      color: 0xff0000,
+      wireframe: true,
+    });
+
+    mesh = new THREE.Mesh(geometry, material);
+    scene.add(mesh);
+  }
+
   useEffect(() => {
     init();
+    initBox();
     animate();
   }, []);
 

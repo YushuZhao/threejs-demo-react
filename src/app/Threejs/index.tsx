@@ -17,7 +17,7 @@ const ThreeContainer = styled.div`
 export default function Threejs() {
   const navigate = useNavigate();
   useEffect(() => {
-    navigate("cube");
+    navigate("STLLoader");
   }, []);
 
   return (
@@ -27,6 +27,7 @@ export default function Threejs() {
         <NavLink to="rain">rain</NavLink>
         <NavLink to="map">map</NavLink>
         <NavLink to="love">love</NavLink>
+        <NavLink to="STLLoader">STLLoader</NavLink>
         <NavLink to="Template">template</NavLink>
       </div>
       <div className="content">
