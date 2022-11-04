@@ -38,7 +38,7 @@ export default function STLLoader() {
     elem.appendChild(renderer.domElement);
   }
 
-  function initLighter() {
+  function initLight() {
     // 环境光
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
     scene.add(ambientLight);
@@ -89,7 +89,7 @@ export default function STLLoader() {
 
   useEffect(() => {
     init();
-    initLighter();
+    initLight();
     initGrid();
     loaderModel();
     animate();
