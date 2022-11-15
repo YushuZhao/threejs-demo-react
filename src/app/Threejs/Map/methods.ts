@@ -6,7 +6,12 @@ import * as THREE from "three";
  * @param color 材质颜色
  * @param projection 坐标转换方法
  * */
-export function drawExtrudeMesh(polygon: any, color: any, projection: any) {
+export function drawExtrudeMesh(
+  polygon: any,
+  color: string,
+  projection: any,
+  index?: number
+) {
   const shape = new THREE.Shape();
   polygon.forEach((row: any, i: any) => {
     const [x, y] = projection(row)!;
@@ -55,7 +60,7 @@ export function drawLine(polygon: any, color: string, projection: any) {
 // 计算 以画布 开始为(0，0)点 的鼠标坐标
 export function getCanvasRelativePosition(
   canvas: HTMLCanvasElement,
-  event: any
+  event: MouseEvent
 ) {
   const rect = canvas.getBoundingClientRect();
   return {
@@ -67,7 +72,7 @@ export function getCanvasRelativePosition(
 /**
  * 获取鼠标在three.js 中归一化坐标
  * */
-export function getPickPosition(canvas: HTMLCanvasElement, event: any) {
+export function getPickPosition(canvas: HTMLCanvasElement, event: MouseEvent) {
   let pickPosition = { x: 0, y: 0 };
   // 计算后 以画布 开始为 （0，0）点
   const pos = getCanvasRelativePosition(canvas, event);

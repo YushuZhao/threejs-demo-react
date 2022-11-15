@@ -7,10 +7,8 @@ import { drawExtrudeMesh, drawLine, handleMapData } from "./methods";
 // import jsonData from "../../../assets/map/China.json";
 import jsonData from "../../../assets/map/ChongQing.json";
 
-const projection1 = d3
-  .geoMercator()
-  .center([116.412318, 39.909843]) // 北京
-  .translate([0, 0]);
+type JsonObj = typeof jsonData;
+
 // 重庆市为中心
 const projection2 = d3
   .geoMercator()
@@ -24,9 +22,9 @@ const ambientLight = new THREE.AmbientLight(0xffffff, 1);
 scence_cq.add(ambientLight);
 
 // 解析数据
-function handleCityData(jsonData: any) {
+function handleCityData(jsonData: JsonObj) {
   const features = jsonData.features;
-  features.forEach((feature: any) => {
+  features.forEach((feature) => {
     // 单个省份 对象
     const province = new THREE.Object3D();
     province.name = feature.properties.name;
@@ -35,9 +33,9 @@ function handleCityData(jsonData: any) {
 
     if (feature.geometry.type === "MultiPolygon") {
       // 多个，多边形
-      coordinates.forEach((coordinate: any) => {
+      coordinates.forEach((coordinate) => {
         // coordinate 多边形数据
-        coordinate.forEach((rows: any) => {
+        coordinate.forEach((rows) => {
           const mesh = drawExtrudeMesh(rows, color, projection2);
           const line = drawLine(rows, color, projection2);
           // 唯一标识
@@ -51,7 +49,7 @@ function handleCityData(jsonData: any) {
 
     if (feature.geometry.type === "Polygon") {
       // 多边形
-      coordinates.forEach((coordinate: any) => {
+      coordinates.forEach((coordinate) => {
         const mesh = drawExtrudeMesh(coordinate, color, projection2);
         const line = drawLine(coordinate, color, projection2);
         // 唯一标识

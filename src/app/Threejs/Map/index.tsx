@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import * as d3 from "d3";
@@ -12,6 +12,8 @@ import {
 import { scence_cq } from "./cityMap";
 import jsonData from "../../../assets/map/China.json";
 // import jsonData from "../../../assets/map/ChongQing.json";
+
+type JsonObj = typeof jsonData;
 
 export default function Map() {
   let camera: THREE.PerspectiveCamera;
@@ -65,17 +67,17 @@ export default function Map() {
     scene.add(ambientLight);
   }
 
-  function control() {
+  function setControl() {
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.update();
   }
 
   // 解析全国数据
-  function handleCountryData(jsonData: any) {
+  function handleCountryData(jsonData: JsonObj) {
     // 全国信息
     const features = jsonData.features;
 
-    features.forEach((feature: any) => {
+    features.forEach((feature, index) => {
       // 单个省份
       const province = new THREE.Object3D();
       province.name = feature.properties.name;
@@ -133,15 +135,15 @@ export default function Map() {
     initAxesHelper();
     initLight();
     render();
-    control();
+    setControl();
 
-    // handleCountryData(jsonData);
-    handleMapData(map, scene, jsonData, projection1);
+    handleCountryData(jsonData);
+    // handleMapData(map, scene, jsonData, projection1);
 
     // 监听鼠标
     window.addEventListener("dblclick", onRay);
 
-    function onRay(event: any) {
+    function onRay(event: MouseEvent) {
       let pickPosition = getPickPosition(canvas, event);
       const raycaster = new THREE.Raycaster();
       raycaster.setFromCamera(pickPosition, camera);
@@ -169,8 +171,6 @@ export default function Map() {
         }
       }
     }
-
-    requestAnimationFrame(render);
   }, []);
 
   return (
