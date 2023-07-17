@@ -7,23 +7,24 @@ import {
 } from "three/examples/jsm/renderers/CSS3DRenderer.js";
 import { TrackballControls } from "three/examples/jsm/controls/TrackballControls.js";
 
-import { table } from "../../../assets/table-data/table";
-
 import "./style.css";
 
 export default function Periodictable() {
   let camera;
   let scene;
+  let group;
   let renderer;
   let controls;
 
   const objects = [];
   const targets = { table: [], sphere: [], helix: [], grid: [] };
+  let rotateId = null;
 
-  function init() {
+  function init(imageFiles) {
     initScene();
     initCamera();
-    initObjects();
+    initGroup();
+    initObjects(imageFiles);
     initRenderer();
     initControls();
   }
@@ -42,42 +43,38 @@ export default function Periodictable() {
     camera.position.z = 3000;
   }
 
-  function initObjects() {
+  function initGroup() {
+    group = new THREE.Group();
+    scene.add(group);
+  }
+
+  function initObjects(imageFiles) {
+    const imageWidth = 120;
+    const imageHeight = 160;
+    const spacing = 10;
+
     // table
-    for (let i = 0; i < table.length; i += 5) {
-      const element = document.createElement("div");
+    for (let i = 0; i < imageFiles.length; i++) {
+      const element = document.createElement("img");
       element.className = "element";
-      element.style.backgroundColor =
-        "rgba(0,127,127," + (Math.random() * 0.5 + 0.25) + ")";
-
-      const number = document.createElement("div");
-      number.className = "number";
-      number.textContent = i / 5 + 1;
-      element.appendChild(number);
-
-      const symbol = document.createElement("div");
-      symbol.className = "symbol";
-      symbol.textContent = table[i];
-      element.appendChild(symbol);
-
-      const details = document.createElement("div");
-      details.className = "details";
-      details.innerHTML = table[i + 1] + "<br>" + table[i + 2];
-      element.appendChild(details);
+      element.src = `http://localhost:3001/images/${imageFiles[i]}`;
 
       const objectCSS = new CSS3DObject(element);
       objectCSS.position.x = Math.random() * 4000 - 2000;
       objectCSS.position.y = Math.random() * 4000 - 2000;
       objectCSS.position.z = Math.random() * 4000 - 2000;
       scene.add(objectCSS);
+      group.add(objectCSS);
 
       objects.push(objectCSS);
 
       //
+      const row = Math.floor(i / 16); // 每行显示16个图片
+      const col = i % 16;
 
       const object = new THREE.Object3D();
-      object.position.x = table[i + 3] * 140 - 1330;
-      object.position.y = -(table[i + 4] * 180) + 990;
+      object.position.x = (imageWidth + spacing) * col - 965;
+      object.position.y = -(imageHeight + spacing) * row + 700;
 
       targets.table.push(object);
     }
@@ -145,25 +142,30 @@ export default function Periodictable() {
     controls = new TrackballControls(camera, renderer.domElement);
     controls.minDistance = 500;
     controls.maxDistance = 6000;
+    controls.rotateSpeed = 0.5;
     controls.addEventListener("change", render);
 
     const buttonTable = document.getElementById("table");
     buttonTable.addEventListener("click", function () {
+      clearRotate();
       transform(targets.table, 2000);
     });
 
     const buttonSphere = document.getElementById("sphere");
     buttonSphere.addEventListener("click", function () {
+      startRotate();
       transform(targets.sphere, 2000);
     });
 
     const buttonHelix = document.getElementById("helix");
     buttonHelix.addEventListener("click", function () {
+      startRotate();
       transform(targets.helix, 2000);
     });
 
     const buttonGrid = document.getElementById("grid");
     buttonGrid.addEventListener("click", function () {
+      startRotate();
       transform(targets.grid, 2000);
     });
 
@@ -213,6 +215,21 @@ export default function Periodictable() {
       .start();
   }
 
+  function startRotate() {
+    if (rotateId == null) {
+      rotateId = setInterval(() => {
+        group.rotation.y -= 0.002;
+        render();
+      }, 50);
+    }
+  }
+  function clearRotate() {
+    if (rotateId != null) {
+      clearInterval(rotateId);
+      rotateId = null;
+    }
+  }
+
   function animate() {
     requestAnimationFrame(animate);
 
@@ -227,8 +244,15 @@ export default function Periodictable() {
   }
 
   useEffect(() => {
-    init();
-    animate();
+    // 获取图片名列表
+    const getImages = async () => {
+      const imageFiles = await fetch("http://localhost:3001/images").then(
+        (res) => res.json()
+      );
+      init(imageFiles);
+      animate();
+    };
+    getImages();
   }, []);
 
   return (
