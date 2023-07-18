@@ -141,9 +141,9 @@ export default function Periodictable() {
             x = 3;
             y++;
           }
-          if (i == images.length - 1) {
+          if (i === images.length - 1) {
             y++;
-            if (mIndex == month.length - 1 && yIndex != years.length - 1) {
+            if (mIndex === month.length - 1 && yIndex !== years.length - 1) {
               x = 1;
             } else {
               x = 2;
