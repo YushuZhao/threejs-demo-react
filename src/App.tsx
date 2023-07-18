@@ -4,5 +4,5 @@ import { routes } from "./router";
 
 export default function APP() {
   const element = useRoutes(routes);
-  return <div>{element}</div>;
+  return <>{element}</>;
 }

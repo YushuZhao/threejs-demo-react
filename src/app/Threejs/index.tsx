@@ -3,14 +3,25 @@ import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 
 const ThreeContainer = styled.div`
+  /* overflow: hidden; */
+  width: 100vw;
+  height: 100vh;
   display: flex;
+  padding: 0;
+  margin: 0;
 
   .tab {
+    width: 120px;
     display: flex;
     flex-direction: column;
     a {
       padding: 10px;
     }
+  }
+
+  .content {
+    /* flex: 1; */
+    width: calc(100% - 120px);
   }
 `;
 
@@ -18,7 +29,7 @@ export default function Threejs() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    navigate("map");
+    navigate("periodictable");
   }, []);
 
   return (

@@ -52,12 +52,24 @@ export default function Periodictable() {
     const imageWidth = 120;
     const imageHeight = 160;
     const spacing = 10;
+    let x = 1;
+    let y = 1;
 
-    // table
-    for (let i = 0; i < imageFiles.length; i++) {
-      const element = document.createElement("img");
+    const years = Object.keys(imageFiles);
+    console.log(years);
+    years.forEach((year, yIndex) => {
+      const months = Object.keys(imageFiles[year]);
+      console.log(months);
+
+      //
+      const element = document.createElement("div");
       element.className = "element";
-      element.src = `http://localhost:3001/images/${imageFiles[i]}`;
+      element.style.backgroundColor =
+        "rgba(0,127,127," + (Math.random() * 0.5 + 0.25) + ")";
+      const symbol = document.createElement("div");
+      symbol.className = "symbol";
+      symbol.textContent = year;
+      element.appendChild(symbol);
 
       const objectCSS = new CSS3DObject(element);
       objectCSS.position.x = Math.random() * 4000 - 2000;
@@ -68,16 +80,106 @@ export default function Periodictable() {
 
       objects.push(objectCSS);
 
-      //
-      const row = Math.floor(i / 16); // 每行显示16个图片
-      const col = i % 16;
-
       const object = new THREE.Object3D();
-      object.position.x = (imageWidth + spacing) * col - 965;
-      object.position.y = -(imageHeight + spacing) * row + 700;
+      object.position.x = x * (imageWidth + spacing) - 1330;
+      object.position.y = -y * (imageHeight + spacing) + 990;
 
       targets.table.push(object);
-    }
+
+      x++;
+
+      //
+      months.forEach((month, mIndex) => {
+        const element = document.createElement("div");
+        element.className = "element";
+        element.style.backgroundColor =
+          "rgba(0,127,127," + (Math.random() * 0.5 + 0.25) + ")";
+        const symbol = document.createElement("div");
+        symbol.className = "symbol";
+        symbol.textContent = month;
+        element.appendChild(symbol);
+
+        const objectCSS = new CSS3DObject(element);
+        objectCSS.position.x = Math.random() * 4000 - 2000;
+        objectCSS.position.y = Math.random() * 4000 - 2000;
+        objectCSS.position.z = Math.random() * 4000 - 2000;
+        scene.add(objectCSS);
+        group.add(objectCSS);
+
+        objects.push(objectCSS);
+
+        const object = new THREE.Object3D();
+        //
+        object.position.x = x * (imageWidth + spacing) - 1330;
+        object.position.y = -y * (imageHeight + spacing) + 990;
+
+        targets.table.push(object);
+
+        //
+        const images = imageFiles[year][month];
+        images.forEach((image, i) => {
+          x++;
+
+          const element = document.createElement("img");
+          element.className = "element";
+          element.src = `http://localhost:3001/images/${year}/${month}/${image}`;
+
+          const objectCSS = new CSS3DObject(element);
+          objectCSS.position.x = Math.random() * 4000 - 2000;
+          objectCSS.position.y = Math.random() * 4000 - 2000;
+          objectCSS.position.z = Math.random() * 4000 - 2000;
+          scene.add(objectCSS);
+          group.add(objectCSS);
+
+          objects.push(objectCSS);
+
+          const object = new THREE.Object3D();
+          object.position.x = x * (imageWidth + spacing) - 1330;
+          object.position.y = -y * (imageHeight + spacing) + 990;
+
+          if (x > 17) {
+            x = 3;
+            y++;
+          }
+          if (i == images.length - 1) {
+            y++;
+            if (mIndex == month.length - 1 && yIndex != years.length - 1) {
+              x = 1;
+            } else {
+              x = 2;
+            }
+          }
+
+          targets.table.push(object);
+        });
+      });
+    });
+
+    // // table
+    // for (let i = 0; i < 100; i++) {
+    //   const element = document.createElement("img");
+    //   element.className = "element";
+    //   element.src = `http://localhost:3001/images/${imageFiles[i % 2]}`;
+
+    //   const objectCSS = new CSS3DObject(element);
+    //   objectCSS.position.x = Math.random() * 4000 - 2000;
+    //   objectCSS.position.y = Math.random() * 4000 - 2000;
+    //   objectCSS.position.z = Math.random() * 4000 - 2000;
+    //   scene.add(objectCSS);
+    //   group.add(objectCSS);
+
+    //   objects.push(objectCSS);
+
+    //   //
+    //   const row = Math.floor(i / 16); // 每行显示16个图片
+    //   const col = i % 16;
+
+    //   const object = new THREE.Object3D();
+    //   object.position.x = (imageWidth + spacing) * col - 965;
+    //   object.position.y = -(imageHeight + spacing) * row + 700;
+
+    //   targets.table.push(object);
+    // }
 
     // sphere
 
@@ -218,7 +320,7 @@ export default function Periodictable() {
   function startRotate() {
     if (rotateId == null) {
       rotateId = setInterval(() => {
-        group.rotation.y -= 0.002;
+        group.rotation.y -= 0.004;
         render();
       }, 50);
     }
