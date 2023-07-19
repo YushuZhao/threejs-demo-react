@@ -55,10 +55,12 @@ export default function Periodictable() {
     let x = 1;
     let y = 1;
 
-    const years = Object.keys(imageFiles);
+    const years = Object.keys(imageFiles).sort((a, b) => Number(a) - Number(b));
     console.log(years);
     years.forEach((year, yIndex) => {
-      const months = Object.keys(imageFiles[year]);
+      const months = Object.keys(imageFiles[year]).sort(
+        (a, b) => Number(a) - Number(b)
+      );
       console.log(months);
 
       //
@@ -112,17 +114,18 @@ export default function Periodictable() {
         //
         object.position.x = x * (imageWidth + spacing) - 1330;
         object.position.y = -y * (imageHeight + spacing) + 990;
-
+        x++;
         targets.table.push(object);
 
         //
         const images = imageFiles[year][month];
         images.forEach((image, i) => {
-          x++;
-
-          const element = document.createElement("img");
+          const element = new Image();
+          // element.src = `http://localhost:3001/images/${year}/${month}/${image}`;
+          element.src = `http://obs.cstcloud.cn/share/obs/databox-lsr/LSR/124/030/L5-TM-124-030-19840417-LSR/L5-TM-124-030-19840417-LSR-THUMB.JPG`;
           element.className = "element";
-          element.src = `http://localhost:3001/images/${year}/${month}/${image}`;
+          // const element = document.createElement("img");
+          // element.className = "element";
 
           const objectCSS = new CSS3DObject(element);
           objectCSS.position.x = Math.random() * 4000 - 2000;
@@ -136,16 +139,32 @@ export default function Periodictable() {
           const object = new THREE.Object3D();
           object.position.x = x * (imageWidth + spacing) - 1330;
           object.position.y = -y * (imageHeight + spacing) + 990;
+          x++;
 
-          if (x > 17) {
-            x = 3;
-            y++;
+          if (x === 17) {
+            // 一行16格，超过换行
+            if (i !== images.length - 1) {
+              // 不换年不换月
+              x = 3;
+              y++;
+            } else if (mIndex === months.length - 1) {
+              // 不换年换月
+              x = 2;
+              y++;
+            } else if (yIndex === years.length - 1) {
+              // 换年
+              x = 1;
+              y++;
+            }
           }
           if (i === images.length - 1) {
+            // 月图片展示结束换行
             y++;
-            if (mIndex === month.length - 1 && yIndex !== years.length - 1) {
+            if (mIndex === months.length - 1 && yIndex !== years.length - 1) {
+              // 换年
               x = 1;
             } else {
+              // 不换年换月
               x = 2;
             }
           }
