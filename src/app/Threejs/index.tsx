@@ -20,8 +20,9 @@ const ThreeContainer = styled.div`
   }
 
   .content {
-    /* flex: 1; */
+    flex: 1;
     width: calc(100% - 120px);
+    position: relative;
   }
 `;
 

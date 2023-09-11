@@ -37,7 +37,7 @@
   color: rgba(127, 255, 255, 0.75);
 }
 
-.periodictable-container.periodictable-container .element .symbol {
+.periodictable-container .element .symbol {
   position: absolute;
   top: 40px;
   left: 0px;
