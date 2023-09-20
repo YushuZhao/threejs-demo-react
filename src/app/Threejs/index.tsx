@@ -30,7 +30,7 @@ export default function Threejs() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    navigate("periodictable");
+    navigate("mapbox");
   }, []);
 
   return (
@@ -45,6 +45,7 @@ export default function Threejs() {
         <NavLink to="Template">template</NavLink>
         <NavLink to="water">water</NavLink>
         <NavLink to="periodictable">periodictable</NavLink>
+        <NavLink to="mapbox">mapbox</NavLink>
       </div>
       <div className="content">
         <Outlet></Outlet>

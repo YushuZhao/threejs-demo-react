@@ -10,6 +10,7 @@ import STLLoader from "../app/Threejs/STLLoader";
 import Template from "../app/Threejs/Template";
 import Water from "../app/Threejs/Water";
 import Periodictable from "../app/Threejs/Periodictable";
+import Mapbox from "../app/Threejs/Mapbox";
 
 export const routes = [
   {
@@ -55,6 +56,10 @@ export const routes = [
       {
         path: "periodictable",
         element: <Periodictable />,
+      },
+      {
+        path: "mapbox",
+        element: <Mapbox />,
       },
     ],
   },
