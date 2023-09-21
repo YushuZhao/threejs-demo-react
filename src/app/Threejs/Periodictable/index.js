@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import * as THREE from "three";
 import * as TWEEN from "@tweenjs/tween.js";
 import {
@@ -10,67 +10,112 @@ import { TrackballControls } from "three/examples/jsm/controls/TrackballControls
 import "./style.css";
 
 export default function Periodictable() {
-  let camera;
-  let scene;
-  let group;
-  let renderer;
-  let controls;
-
-  const objects = [];
+  const [state, setState] = useState(1);
+  let cameraRef = useRef();
+  let sceneRef = useRef();
+  let groupRef = useRef();
+  let rendererRef = useRef();
+  let controlsRef = useRef();
+  let renderRef = useRef();
+  const objects = useRef([]);
   const targets = { table: [], sphere: [], helix: [], grid: [] };
   let rotateId = null;
 
-  function init(imageFiles) {
-    initScene();
-    initCamera();
-    initGroup();
-    initObjects(imageFiles);
-    initRenderer();
-    initControls();
-  }
-
-  function initScene() {
-    scene = new THREE.Scene();
-  }
-
-  function initCamera() {
-    camera = new THREE.PerspectiveCamera(
+  useEffect(() => {
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(
       40,
       window.innerWidth / window.innerHeight,
       1,
       10000
     );
     camera.position.z = 3000;
-  }
 
-  function initGroup() {
-    group = new THREE.Group();
+    const group = new THREE.Group();
     scene.add(group);
-  }
 
-  function initObjects(imageFiles) {
+    const renderer = new CSS3DRenderer();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+
+    const elem = document.getElementById("periodictable");
+    elem.appendChild(renderer.domElement);
+
+    const controls = new TrackballControls(camera, renderer.domElement);
+    controls.minDistance = 500;
+    controls.maxDistance = 6000;
+    controls.rotateSpeed = 0.5;
+    controls.addEventListener("change", render);
+
+    sceneRef.current = scene;
+    cameraRef.current = camera;
+    groupRef.current = group;
+    rendererRef.current = renderer;
+    controlsRef.current = controls;
+    renderRef.current = render;
+    animate();
+
+    window.addEventListener("resize", onWindowResize);
+
+    function render() {
+      renderer.render(scene, camera);
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+      TWEEN.update();
+      controls.update();
+      render();
+    }
+
+    function onWindowResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      render();
+    }
+
+    return () => {
+      window.removeEventListener("resize", onWindowResize);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!sceneRef.current || !groupRef.current) return;
+    const getData = async () => {
+      const ds_ids = [1, 2, 3, 4].slice(0, state).join(",");
+      const res = await fetch(
+        `http://gis-service-api.test-out.hotgrid.cn:8780/earth/grid-list?ds_ids=${ds_ids}&start_time=2023-08-20&end_time=2023-09-01&time_type=day&grid_ids=8140bffffffffff`
+      ).then((res) => res.json());
+      console.log(res);
+      const result = res.result;
+      formatGroupData(result, sceneRef.current, groupRef.current);
+    };
+    getData();
+  }, [state, sceneRef.current, groupRef.current]);
+
+  function formatGroupData(imageFiles, scene, group) {
     const imageWidth = 120;
     const imageHeight = 160;
     const spacing = 10;
     let x = 1;
     let y = 1;
+    if (objects.current.length > 0) {
+      objects.current.forEach((item) => {
+        sceneRef.current.remove(item);
+        groupRef.current.remove(item);
+      });
+      objects.current = [];
+    }
 
-    const years = Object.keys(imageFiles).sort((a, b) => Number(a) - Number(b));
-    console.log(years);
-    years.forEach((year, yIndex) => {
-      const months = Object.keys(imageFiles[year]).sort(
-        (a, b) => Number(a) - Number(b)
-      );
-      console.log(months);
-
-      //
+    imageFiles.forEach((day, i) => {
+      const { dt, img } = day;
       const element = document.createElement("div");
       element.className = "element";
       element.style.backgroundColor =
         "rgba(0,127,127," + (Math.random() * 0.5 + 0.25) + ")";
       const symbol = document.createElement("div");
       symbol.className = "symbol";
-      symbol.textContent = year;
+      symbol.textContent = dt;
       element.appendChild(symbol);
 
       const objectCSS = new CSS3DObject(element);
@@ -80,7 +125,7 @@ export default function Periodictable() {
       scene.add(objectCSS);
       group.add(objectCSS);
 
-      objects.push(objectCSS);
+      objects.current.push(objectCSS);
 
       const object = new THREE.Object3D();
       object.position.x = x * (imageWidth + spacing) - 1330;
@@ -88,123 +133,38 @@ export default function Periodictable() {
 
       targets.table.push(object);
 
-      x++;
-
-      //
-      months.forEach((month, mIndex) => {
-        const element = document.createElement("div");
+      img.forEach((url, index) => {
+        x++;
+        const element = new Image();
+        element.src = url;
         element.className = "element";
-        element.style.backgroundColor =
-          "rgba(0,127,127," + (Math.random() * 0.5 + 0.25) + ")";
-        const symbol = document.createElement("div");
-        symbol.className = "symbol";
-        symbol.textContent = month;
-        element.appendChild(symbol);
 
         const objectCSS = new CSS3DObject(element);
-        objectCSS.position.x = Math.random() * 4000 - 2000;
-        objectCSS.position.y = Math.random() * 4000 - 2000;
-        objectCSS.position.z = Math.random() * 4000 - 2000;
+        // objectCSS.position.x = Math.random() * 4000 - 2000;
+        // objectCSS.position.y = Math.random() * 4000 - 2000;
+        // objectCSS.position.z = Math.random() * 4000 - 2000;
         scene.add(objectCSS);
         group.add(objectCSS);
 
-        objects.push(objectCSS);
+        objects.current.push(objectCSS);
 
         const object = new THREE.Object3D();
-        //
         object.position.x = x * (imageWidth + spacing) - 1330;
         object.position.y = -y * (imageHeight + spacing) + 990;
-        x++;
+
         targets.table.push(object);
-
-        //
-        const images = imageFiles[year][month];
-        images.forEach((image, i) => {
-          const element = new Image();
-          // element.src = `http://localhost:3001/images/${year}/${month}/${image}`;
-          element.src = `http://obs.cstcloud.cn/share/obs/databox-lsr/LSR/124/030/L5-TM-124-030-19840417-LSR/L5-TM-124-030-19840417-LSR-THUMB.JPG`;
-          element.className = "element";
-          // const element = document.createElement("img");
-          // element.className = "element";
-
-          const objectCSS = new CSS3DObject(element);
-          objectCSS.position.x = Math.random() * 4000 - 2000;
-          objectCSS.position.y = Math.random() * 4000 - 2000;
-          objectCSS.position.z = Math.random() * 4000 - 2000;
-          scene.add(objectCSS);
-          group.add(objectCSS);
-
-          objects.push(objectCSS);
-
-          const object = new THREE.Object3D();
-          object.position.x = x * (imageWidth + spacing) - 1330;
-          object.position.y = -y * (imageHeight + spacing) + 990;
-          x++;
-
-          if (x === 17) {
-            // 一行16格，超过换行
-            if (i !== images.length - 1) {
-              // 不换年不换月
-              x = 3;
-              y++;
-            } else if (mIndex === months.length - 1) {
-              // 不换年换月
-              x = 2;
-              y++;
-            } else if (yIndex === years.length - 1) {
-              // 换年
-              x = 1;
-              y++;
-            }
-          }
-          if (i === images.length - 1) {
-            // 月图片展示结束换行
-            y++;
-            if (mIndex === months.length - 1 && yIndex !== years.length - 1) {
-              // 换年
-              x = 1;
-            } else {
-              // 不换年换月
-              x = 2;
-            }
-          }
-
-          targets.table.push(object);
-        });
+        if (index === img.length - 1) {
+          x = 1;
+        }
       });
+      y++;
     });
-
-    // // table
-    // for (let i = 0; i < 100; i++) {
-    //   const element = document.createElement("img");
-    //   element.className = "element";
-    //   element.src = `http://localhost:3001/images/${imageFiles[i % 2]}`;
-
-    //   const objectCSS = new CSS3DObject(element);
-    //   objectCSS.position.x = Math.random() * 4000 - 2000;
-    //   objectCSS.position.y = Math.random() * 4000 - 2000;
-    //   objectCSS.position.z = Math.random() * 4000 - 2000;
-    //   scene.add(objectCSS);
-    //   group.add(objectCSS);
-
-    //   objects.push(objectCSS);
-
-    //   //
-    //   const row = Math.floor(i / 16); // 每行显示16个图片
-    //   const col = i % 16;
-
-    //   const object = new THREE.Object3D();
-    //   object.position.x = (imageWidth + spacing) * col - 965;
-    //   object.position.y = -(imageHeight + spacing) * row + 700;
-
-    //   targets.table.push(object);
-    // }
 
     // sphere
 
     const vector = new THREE.Vector3();
 
-    for (let i = 0, l = objects.length; i < l; i++) {
+    for (let i = 0, l = objects.current.length; i < l; i++) {
       const phi = Math.acos(-1 + (2 * i) / l);
       const theta = Math.sqrt(l * Math.PI) * phi;
 
@@ -221,7 +181,7 @@ export default function Periodictable() {
 
     // helix
 
-    for (let i = 0, l = objects.length; i < l; i++) {
+    for (let i = 0, l = objects.current.length; i < l; i++) {
       const theta = i * 0.175 + Math.PI;
       const y = -(i * 8) + 450;
 
@@ -240,7 +200,7 @@ export default function Periodictable() {
 
     // grid
 
-    for (let i = 0; i < objects.length; i++) {
+    for (let i = 0; i < objects.current.length; i++) {
       const object = new THREE.Object3D();
 
       object.position.x = (i % 5) * 400 - 800;
@@ -249,68 +209,15 @@ export default function Periodictable() {
 
       targets.grid.push(object);
     }
-  }
-
-  function initRenderer() {
-    renderer = new CSS3DRenderer();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-
-    const elem = document.getElementById("periodictable");
-    elem.appendChild(renderer.domElement);
-  }
-
-  function initControls() {
-    controls = new TrackballControls(camera, renderer.domElement);
-    controls.minDistance = 500;
-    controls.maxDistance = 6000;
-    controls.rotateSpeed = 0.5;
-    controls.addEventListener("change", render);
-
-    const buttonTable = document.getElementById("table");
-    buttonTable.addEventListener("click", function () {
-      clearRotate();
-      transform(targets.table, 2000);
-    });
-
-    const buttonSphere = document.getElementById("sphere");
-    buttonSphere.addEventListener("click", function () {
-      startRotate();
-      transform(targets.sphere, 2000);
-    });
-
-    const buttonHelix = document.getElementById("helix");
-    buttonHelix.addEventListener("click", function () {
-      startRotate();
-      transform(targets.helix, 2000);
-    });
-
-    const buttonGrid = document.getElementById("grid");
-    buttonGrid.addEventListener("click", function () {
-      startRotate();
-      transform(targets.grid, 2000);
-    });
 
     transform(targets.table, 2000);
-
-    //
-
-    window.addEventListener("resize", onWindowResize);
-  }
-
-  function onWindowResize() {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-
-    renderer.setSize(window.innerWidth, window.innerHeight);
-
-    render();
   }
 
   function transform(targets, duration) {
     TWEEN.removeAll();
 
-    for (let i = 0; i < objects.length; i++) {
-      const object = objects[i];
+    for (let i = 0; i < objects.current.length; i++) {
+      const object = objects.current[i];
       const target = targets[i];
 
       new TWEEN.Tween(object.position)
@@ -330,13 +237,13 @@ export default function Periodictable() {
         .start();
     }
 
-    new TWEEN.Tween(this)
-      .to({}, duration * 2)
-      .onUpdate(render)
-      .start();
+    // new TWEEN.Tween()
+    //   .to({}, duration * 2)
+    //   .onUpdate(render)
+    //   .start();
   }
 
-  function startRotate() {
+  function startRotate(group, render) {
     if (rotateId == null) {
       rotateId = setInterval(() => {
         group.rotation.y -= 0.004;
@@ -344,6 +251,7 @@ export default function Periodictable() {
       }, 50);
     }
   }
+
   function clearRotate() {
     if (rotateId != null) {
       clearInterval(rotateId);
@@ -351,39 +259,53 @@ export default function Periodictable() {
     }
   }
 
-  function animate() {
-    requestAnimationFrame(animate);
-
-    TWEEN.update();
-
-    controls.update();
-    render();
-  }
-
-  function render() {
-    renderer.render(scene, camera);
-  }
-
-  useEffect(() => {
-    // 获取图片名列表
-    const getImages = async () => {
-      const imageFiles = await fetch("http://localhost:3001/images").then(
-        (res) => res.json()
-      );
-      init(imageFiles);
-      animate();
-    };
-    getImages();
-  }, []);
-
   return (
     <div className="periodictable-container">
       <div id="periodictable" className="periodictable"></div>
       <div id="menu">
-        <button id="table">TABLE</button>
-        <button id="sphere">SPHERE</button>
-        <button id="helix">HELIX</button>
-        <button id="grid">GRID</button>
+        <button
+          id="table"
+          onClick={() => {
+            clearRotate();
+            transform(targets.table, 2000);
+          }}
+        >
+          TABLE
+        </button>
+        <button
+          id="sphere"
+          onClick={() => {
+            startRotate(groupRef.current, renderRef.current);
+            transform(targets.sphere, 2000);
+          }}
+        >
+          SPHERE
+        </button>
+        <button
+          id="helix"
+          onClick={() => {
+            startRotate(groupRef.current, renderRef.current);
+            transform(targets.helix, 2000);
+          }}
+        >
+          HELIX
+        </button>
+        <button
+          id="grid"
+          onClick={() => {
+            startRotate(groupRef.current, renderRef.current);
+            transform(targets.grid, 2000);
+          }}
+        >
+          GRID
+        </button>
+        <button
+          onClick={() => {
+            setState((pre) => pre + 1);
+          }}
+        >
+          重绘
+        </button>
       </div>
     </div>
   );

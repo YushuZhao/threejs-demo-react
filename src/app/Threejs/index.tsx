@@ -30,7 +30,7 @@ export default function Threejs() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    navigate("mapbox");
+    navigate("periodictable");
   }, []);
 
   return (
