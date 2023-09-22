@@ -11,15 +11,183 @@ import "./style.css";
 
 export default function Periodictable() {
   const [state, setState] = useState(1);
+  // 保存数据
+  const [css3DObjects, setCss3DObjects] = useState();
+  const [datas, setDatas] = useState();
+  const [type, setType] = useState("table");
+
   let cameraRef = useRef();
   let sceneRef = useRef();
   let groupRef = useRef();
   let rendererRef = useRef();
   let controlsRef = useRef();
   let renderRef = useRef();
-  const objects = useRef([]);
-  const targets = { table: [], sphere: [], helix: [], grid: [] };
   let rotateId = null;
+
+  const imageWidth = 120;
+  const imageHeight = 160;
+  const spacing = 10;
+
+  // 请求数据 => 格式化数据 => 渲染
+
+  // [{
+  //   type: 'text' | 'img',
+  //   data: 'xxx' | 'data:image',
+  //   x: number
+  //   y: number
+  // }]
+
+  // 请求数据
+  useEffect(() => {
+    const getData = async () => {
+      const ds_ids = [1, 2, 3, 4].slice(0, state).join(",");
+      const res = await fetch(
+        `http://gis-service-api.test-out.hotgrid.cn:8780/earth/grid-list?ds_ids=${ds_ids}&start_time=2023-08-20&end_time=2023-09-01&time_type=day&grid_ids=8140bffffffffff`
+      ).then((res) => res.json());
+      const result = res.result;
+      const format = [];
+      result.forEach((day, i) => {
+        const { dt, img } = day;
+        format.push({
+          type: "text",
+          data: dt,
+          x: 1,
+          y: i + 1,
+        });
+        img.forEach((url, index) => {
+          format.push({
+            type: "img",
+            data: url,
+            x: index + 2,
+            y: i + 1,
+          });
+        });
+      });
+      setDatas(format);
+    };
+    getData();
+  }, [state]);
+
+  // 格式化数据
+  useEffect(() => {
+    TWEEN.removeAll();
+    css3DObjects?.forEach((item) => {
+      sceneRef.current.remove(item);
+      groupRef.current.remove(item);
+    });
+    const elements = datas?.map((item, i) => {
+      const objectCSS = createElement(item);
+      sceneRef.current.add(objectCSS);
+      groupRef.current.add(objectCSS);
+      return objectCSS;
+    });
+    setCss3DObjects(elements);
+    console.log(elements);
+  }, [datas]);
+
+  const createElement = (elem) => {
+    const { type, data } = elem;
+    if (type === "text") {
+      const element = document.createElement("div");
+      element.className = "element";
+      element.style.backgroundColor =
+        "rgba(0,127,127," + (Math.random() * 0.5 + 0.25) + ")";
+      const symbol = document.createElement("div");
+      symbol.className = "symbol";
+      symbol.textContent = data;
+      element.appendChild(symbol);
+
+      const objectCSS = new CSS3DObject(element);
+      return objectCSS;
+    } else {
+      const element = new Image();
+      element.src = data;
+      element.className = "element";
+
+      const objectCSS = new CSS3DObject(element);
+      return objectCSS;
+    }
+  };
+
+  // 按类型渲染
+  useEffect(() => {
+    const vector = new THREE.Vector3();
+
+    css3DObjects?.forEach((objectCSS, i) => {
+      const object = generateFunctions[type](
+        vector,
+        css3DObjects.length,
+        i,
+        datas[i]
+      );
+
+      new TWEEN.Tween(objectCSS.position)
+        .to(
+          { x: object.position.x, y: object.position.y, z: object.position.z },
+          Math.random() * 2000 + 2000
+        )
+        .easing(TWEEN.Easing.Exponential.InOut)
+        .start();
+
+      new TWEEN.Tween(objectCSS.rotation)
+        .to(
+          { x: object.rotation.x, y: object.rotation.y, z: object.rotation.z },
+          Math.random() * 2000 + 2000
+        )
+        .easing(TWEEN.Easing.Exponential.InOut)
+        .start();
+    });
+  }, [css3DObjects, type]);
+
+  const generateTableShape = (vector, length, i, { x, y }) => {
+    const object = new THREE.Object3D();
+    object.position.x = x * (imageWidth + spacing) - 1330;
+    object.position.y = -y * (imageHeight + spacing) + 990;
+    return object;
+  };
+
+  const generateSphereShape = (vector, length, i) => {
+    const phi = Math.acos(-1 + (2 * i) / length);
+    const theta = Math.sqrt(length * Math.PI) * phi;
+    const object = new THREE.Object3D();
+    object.position.setFromSphericalCoords(800, phi, theta);
+    vector.copy(object.position).multiplyScalar(2);
+    object.lookAt(vector);
+    return object;
+  };
+
+  const generateHelixShape = (vector, length, i) => {
+    const theta = i * 0.175 + Math.PI;
+    const y = -(i * 8) + 450;
+
+    const object = new THREE.Object3D();
+
+    object.position.setFromCylindricalCoords(900, theta, y);
+
+    vector.x = object.position.x * 2;
+    vector.y = object.position.y;
+    vector.z = object.position.z * 2;
+
+    object.lookAt(vector);
+    return object;
+  };
+
+  const generateGridShape = (vector, length, i) => {
+    const object = new THREE.Object3D();
+
+    object.position.x = (i % 5) * 400 - 800;
+    object.position.y = -(Math.floor(i / 5) % 5) * 400 + 800;
+    object.position.z = Math.floor(i / 25) * 1000 - 2000;
+
+    return object;
+  };
+
+  const generateFunctions = {
+    table: generateTableShape,
+    sphere: generateSphereShape,
+    helix: generateHelixShape,
+    grid: generateGridShape,
+  };
 
   useEffect(() => {
     const scene = new THREE.Scene();
@@ -79,170 +247,6 @@ export default function Periodictable() {
     };
   }, []);
 
-  useEffect(() => {
-    if (!sceneRef.current || !groupRef.current) return;
-    const getData = async () => {
-      const ds_ids = [1, 2, 3, 4].slice(0, state).join(",");
-      const res = await fetch(
-        `http://gis-service-api.test-out.hotgrid.cn:8780/earth/grid-list?ds_ids=${ds_ids}&start_time=2023-08-20&end_time=2023-09-01&time_type=day&grid_ids=8140bffffffffff`
-      ).then((res) => res.json());
-      console.log(res);
-      const result = res.result;
-      formatGroupData(result, sceneRef.current, groupRef.current);
-    };
-    getData();
-  }, [state, sceneRef.current, groupRef.current]);
-
-  function formatGroupData(imageFiles, scene, group) {
-    const imageWidth = 120;
-    const imageHeight = 160;
-    const spacing = 10;
-    let x = 1;
-    let y = 1;
-    if (objects.current.length > 0) {
-      objects.current.forEach((item) => {
-        sceneRef.current.remove(item);
-        groupRef.current.remove(item);
-      });
-      objects.current = [];
-    }
-
-    imageFiles.forEach((day, i) => {
-      const { dt, img } = day;
-      const element = document.createElement("div");
-      element.className = "element";
-      element.style.backgroundColor =
-        "rgba(0,127,127," + (Math.random() * 0.5 + 0.25) + ")";
-      const symbol = document.createElement("div");
-      symbol.className = "symbol";
-      symbol.textContent = dt;
-      element.appendChild(symbol);
-
-      const objectCSS = new CSS3DObject(element);
-      objectCSS.position.x = Math.random() * 4000 - 2000;
-      objectCSS.position.y = Math.random() * 4000 - 2000;
-      objectCSS.position.z = Math.random() * 4000 - 2000;
-      scene.add(objectCSS);
-      group.add(objectCSS);
-
-      objects.current.push(objectCSS);
-
-      const object = new THREE.Object3D();
-      object.position.x = x * (imageWidth + spacing) - 1330;
-      object.position.y = -y * (imageHeight + spacing) + 990;
-
-      targets.table.push(object);
-
-      img.forEach((url, index) => {
-        x++;
-        const element = new Image();
-        element.src = url;
-        element.className = "element";
-
-        const objectCSS = new CSS3DObject(element);
-        // objectCSS.position.x = Math.random() * 4000 - 2000;
-        // objectCSS.position.y = Math.random() * 4000 - 2000;
-        // objectCSS.position.z = Math.random() * 4000 - 2000;
-        scene.add(objectCSS);
-        group.add(objectCSS);
-
-        objects.current.push(objectCSS);
-
-        const object = new THREE.Object3D();
-        object.position.x = x * (imageWidth + spacing) - 1330;
-        object.position.y = -y * (imageHeight + spacing) + 990;
-
-        targets.table.push(object);
-        if (index === img.length - 1) {
-          x = 1;
-        }
-      });
-      y++;
-    });
-
-    // sphere
-
-    const vector = new THREE.Vector3();
-
-    for (let i = 0, l = objects.current.length; i < l; i++) {
-      const phi = Math.acos(-1 + (2 * i) / l);
-      const theta = Math.sqrt(l * Math.PI) * phi;
-
-      const object = new THREE.Object3D();
-
-      object.position.setFromSphericalCoords(800, phi, theta);
-
-      vector.copy(object.position).multiplyScalar(2);
-
-      object.lookAt(vector);
-
-      targets.sphere.push(object);
-    }
-
-    // helix
-
-    for (let i = 0, l = objects.current.length; i < l; i++) {
-      const theta = i * 0.175 + Math.PI;
-      const y = -(i * 8) + 450;
-
-      const object = new THREE.Object3D();
-
-      object.position.setFromCylindricalCoords(900, theta, y);
-
-      vector.x = object.position.x * 2;
-      vector.y = object.position.y;
-      vector.z = object.position.z * 2;
-
-      object.lookAt(vector);
-
-      targets.helix.push(object);
-    }
-
-    // grid
-
-    for (let i = 0; i < objects.current.length; i++) {
-      const object = new THREE.Object3D();
-
-      object.position.x = (i % 5) * 400 - 800;
-      object.position.y = -(Math.floor(i / 5) % 5) * 400 + 800;
-      object.position.z = Math.floor(i / 25) * 1000 - 2000;
-
-      targets.grid.push(object);
-    }
-
-    transform(targets.table, 2000);
-  }
-
-  function transform(targets, duration) {
-    TWEEN.removeAll();
-
-    for (let i = 0; i < objects.current.length; i++) {
-      const object = objects.current[i];
-      const target = targets[i];
-
-      new TWEEN.Tween(object.position)
-        .to(
-          { x: target.position.x, y: target.position.y, z: target.position.z },
-          Math.random() * duration + duration
-        )
-        .easing(TWEEN.Easing.Exponential.InOut)
-        .start();
-
-      new TWEEN.Tween(object.rotation)
-        .to(
-          { x: target.rotation.x, y: target.rotation.y, z: target.rotation.z },
-          Math.random() * duration + duration
-        )
-        .easing(TWEEN.Easing.Exponential.InOut)
-        .start();
-    }
-
-    // new TWEEN.Tween()
-    //   .to({}, duration * 2)
-    //   .onUpdate(render)
-    //   .start();
-  }
-
   function startRotate(group, render) {
     if (rotateId == null) {
       rotateId = setInterval(() => {
@@ -266,8 +270,8 @@ export default function Periodictable() {
         <button
           id="table"
           onClick={() => {
+            setType("table");
             clearRotate();
-            transform(targets.table, 2000);
           }}
         >
           TABLE
@@ -275,8 +279,8 @@ export default function Periodictable() {
         <button
           id="sphere"
           onClick={() => {
+            setType("sphere");
             startRotate(groupRef.current, renderRef.current);
-            transform(targets.sphere, 2000);
           }}
         >
           SPHERE
@@ -284,8 +288,8 @@ export default function Periodictable() {
         <button
           id="helix"
           onClick={() => {
+            setType("helix");
             startRotate(groupRef.current, renderRef.current);
-            transform(targets.helix, 2000);
           }}
         >
           HELIX
@@ -293,8 +297,8 @@ export default function Periodictable() {
         <button
           id="grid"
           onClick={() => {
+            setType("grid");
             startRotate(groupRef.current, renderRef.current);
-            transform(targets.grid, 2000);
           }}
         >
           GRID
