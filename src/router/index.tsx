@@ -11,6 +11,7 @@ import Template from "../app/Threejs/Template";
 import Water from "../app/Threejs/Water";
 import Periodictable from "../app/Threejs/Periodictable";
 import Mapbox from "../app/Threejs/Mapbox";
+import RasterColor from "../app/Threejs/RasterColor";
 
 export const routes = [
   {
@@ -60,6 +61,10 @@ export const routes = [
       {
         path: "mapbox",
         element: <Mapbox />,
+      },
+      {
+        path: "raster-color",
+        element: <RasterColor />,
       },
     ],
   },
