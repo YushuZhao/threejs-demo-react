@@ -4,6 +4,7 @@ import Three from "../app/Threejs";
 import Cube from "../app/Threejs/Cube";
 import Rain from "../app/Threejs/Rain";
 import Map from "../app/Threejs/Map";
+import Earth from "../app/Threejs/Earth";
 import Raycaster from "../app/Threejs/Raycaster";
 import Love from "../app/Threejs/Love";
 import STLLoader from "../app/Threejs/STLLoader";
@@ -33,6 +34,10 @@ export const routes = [
       {
         path: "map",
         element: <Map />,
+      },
+      {
+        path: "earth",
+        element: <Earth />,
       },
       {
         path: "raycaster",
