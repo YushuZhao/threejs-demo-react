@@ -10,7 +10,7 @@ import {
   handleMapData,
 } from "./methods";
 import { scence_cq } from "./cityMap";
-import jsonData from "../../../assets/map/China.json";
+import jsonData from "../../../assets/map/ChinaAll.json";
 // import jsonData from "../../../assets/map/ChongQing.json";
 
 type JsonObj = typeof jsonData;

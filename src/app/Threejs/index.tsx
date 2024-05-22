@@ -44,7 +44,7 @@ export default function Threejs() {
         <NavLink to="love">love</NavLink>
         <NavLink to="STLLoader">STLLoader</NavLink>
         <NavLink to="Template">template</NavLink>
-        <NavLink to="water">water</NavLink>
+        {/* <NavLink to="water">water</NavLink> */}
         <NavLink to="periodictable">periodictable</NavLink>
         <NavLink to="mapbox">mapbox</NavLink>
         <NavLink to="raster-color">raster-color</NavLink>

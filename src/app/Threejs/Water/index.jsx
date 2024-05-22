@@ -5,7 +5,7 @@ import * as GeoTIFF from "geotiff";
 import terrain from "../../../assets/data/c250m.tif";
 import satellite from "../../../assets/data/satellite.png";
 
-export default function Template() {
+export default function Water() {
   // let camera: THREE.PerspectiveCamera;
   // let scene: THREE.Scene;
   // let renderer: THREE.WebGLRenderer;

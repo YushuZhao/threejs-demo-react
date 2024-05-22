@@ -4,7 +4,7 @@ import * as d3 from "d3";
 
 import { drawExtrudeMesh, drawLine, handleMapData } from "./methods";
 
-// import jsonData from "../../../assets/map/China.json";
+// import jsonData from "../../../assets/map/ChinaAll.json";
 import jsonData from "../../../assets/map/ChongQing.json";
 
 type JsonObj = typeof jsonData;

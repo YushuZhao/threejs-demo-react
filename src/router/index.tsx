@@ -9,7 +9,7 @@ import Raycaster from "../app/Threejs/Raycaster";
 import Love from "../app/Threejs/Love";
 import STLLoader from "../app/Threejs/STLLoader";
 import Template from "../app/Threejs/Template";
-import Water from "../app/Threejs/Water";
+// import Water from "../app/Threejs/Water";
 import Periodictable from "../app/Threejs/Periodictable";
 import Mapbox from "../app/Threejs/Mapbox";
 import RasterColor from "../app/Threejs/RasterColor";
@@ -55,10 +55,10 @@ export const routes = [
         path: "template",
         element: <Template />,
       },
-      {
-        path: "water",
-        element: <Water />,
-      },
+      // {
+      //   path: "water",
+      //   element: <Water />,
+      // },
       {
         path: "periodictable",
         element: <Periodictable />,
